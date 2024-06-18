@@ -7,6 +7,7 @@ const router = require("express").Router();
 
 const filePath = path.join(__dirname, "../data/workout-log.json");
 
+// function to get workoutdata
 function loadWorkoutData() {
   if (!fs.existsSync(filePath)) {
     return []; // Return an empty array if the file does not exist
@@ -15,22 +16,42 @@ function loadWorkoutData() {
   return workouts;
 }
 
+// function to write to JSON file
+function saveWorkoutData(data) {
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+}
+
+// Get all workouts
 router.get("/workouts", (req, res) => {
   res.json(loadWorkoutData());
 });
 
+// Get a specific workout
 router.get("/workouts/:id", (req, res) => {
   const workouts = loadWorkoutData();
   const foundWorkout = workouts.find((workout) => workout.id === req.params.id);
   res.json(foundWorkout);
 });
 
+// Delete a workout
+router.delete("/workouts/:id", (req, res) => {
+  const workouts = loadWorkoutData();
+  const { id } = req.params;
+
+  const workoutIndex = workouts.findIndex((workout) => workout.id === id);
+
+  if (workoutIndex !== -1) {
+    workouts.splice(workoutIndex, 1);
+    saveWorkoutData(workouts);
+    res.json({ message: "workout successfully deleted!" });
+  } else {
+    res.status({ message: "workout not found" });
+  }
+});
+
+// post a workout
 router.post("/workouts", (req, res) => {
   const workouts = loadWorkoutData();
-
-  if (!Array.isArray(req.body.exercises)) {
-    return res.status(400).json({ message: "Exercises must be an array" });
-  }
 
   const newWorkout = {
     id: uuidv4(),
@@ -47,7 +68,7 @@ router.post("/workouts", (req, res) => {
   };
   workouts.push(newWorkout);
 
-  fs.writeFileSync(filePath, JSON.stringify(workouts, null, 2));
+  saveWorkoutData(workouts);
 
   res.status(201).json(newWorkout);
 });
