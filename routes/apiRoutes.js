@@ -36,7 +36,7 @@ router.post("/workouts", (req, res) => {
     id: uuidv4(),
     duration: req.body.duration,
     workout_name: req.body.workout_name,
-    date: Date.now(),
+    date: new Date().toISOString().split("T")[0],
     exercises: req.body.exercises.map((exercise) => ({
       exercise_name: exercise.exercise_name,
       sets: exercise.sets,
